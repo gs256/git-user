@@ -46,7 +46,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "git-switch"
+name = "git-user"
 version = "0.1.0"
 dependencies = [
  "directories",

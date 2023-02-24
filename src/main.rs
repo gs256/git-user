@@ -79,6 +79,7 @@ fn is_input_positive(input: &str) -> bool {
     return false;
 }
 
+// TODO: check if exists
 fn read_profiles_from_file(file_path: &str) -> Vec<Profile> {
     let contents = fs::read_to_string(file_path)
         .expect(format!("Couldn't read the file {}", file_path).as_str());
@@ -105,7 +106,7 @@ fn get_config_path() -> Option<String> {
         None => None,
         Some(user_dirs) => {
             let home = user_dirs.home_dir();
-            let config_path = home.join(".git-switch.txt");
+            let config_path = home.join(".git-user.txt");
             return match config_path.to_str() {
                 None => None,
                 Some(path) => Some(String::from(path)),
