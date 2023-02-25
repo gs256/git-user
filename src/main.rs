@@ -1,7 +1,5 @@
 use directories::UserDirs;
 use std::{
-    error::Error,
-    fmt::{format, write},
     fs::{self, OpenOptions},
     io::{stdin, stdout, BufRead, Write},
     process::Command,
