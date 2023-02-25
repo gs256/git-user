@@ -1,6 +1,6 @@
 use directories::UserDirs;
 use std::{
-    fs::{self, OpenOptions},
+    fs::{self, File, OpenOptions},
     io::{stdin, stdout, BufRead, Write},
     process::Command,
 };
@@ -12,79 +12,120 @@ struct Profile {
 }
 
 fn main() {
-    let config_path = get_config_path().unwrap();
-    let profiles = read_profiles_from_file(config_path.as_str());
-    let mut input = String::new();
+    let mut console_input = String::new();
 
     if let Some(profile) = get_current_profile() {
-        println!(
-            "User '{}:{}' already added to this repo.",
-            profile.name, profile.email
-        );
-        print!("Configure new user? [Y/n] ");
-        stdout().flush().unwrap();
-        input.clear();
-        stdin().lock().read_line(&mut input).unwrap();
+        println!("User '{}' already added to this repo.", to_string(&profile));
+        print("Change user? [Y/n] ");
+        let choise = input(&mut console_input);
 
-        if !is_input_positive(input.as_str()) {
+        if !is_choise_positive(&choise) {
             return;
         }
     } else {
-        println!("No user configured for this repo")
+        println!("No user configured for this repo");
     }
 
-    println!("\nWhich profile to add? (from {config_path})");
-    for (i, profile) in profiles.iter().enumerate() {
-        println!("{}. {} - {}", i + 1, profile.name, profile.email)
+    offer_to_configure_profile()
+}
+
+fn offer_to_configure_profile() {
+    let config_path = get_config_path();
+
+    loop {
+        let profiles = read_profiles_from_file(&config_path);
+
+        if !dispatch_options(&profiles) {
+            break;
+        }
     }
+}
+
+fn dispatch_options(profiles: &[Profile]) -> bool {
+    let config_path = get_config_path();
+    let mut input_buffer = String::new();
 
     if profiles.len() == 0 {
         println!("No profiles found in {config_path}");
+        print("Add a new profile? [Y/n] ");
+        let choise = input(&mut input_buffer);
+
+        if is_choise_positive(&choise) {
+            create_profile();
+            return true;
+        }
+
+        return false;
+    }
+
+    println!("\nWhich profile to use in this repo? (from {config_path})");
+
+    for (i, profile) in profiles.iter().enumerate() {
+        println!("{}. Profile '{}:{}'", i + 1, profile.name, profile.email)
     }
 
     println!("{}. Add a new profile", profiles.len() + 1);
+    print("\nOption: ");
 
-    print!("\nOption: ");
-    stdout().flush().unwrap();
+    let choise_raw = input(&mut input_buffer);
+    let choise = choise_raw.trim().parse::<usize>();
 
-    input.clear();
-    stdin().lock().read_line(&mut input).unwrap();
-
-    let choise: usize = input.trim().parse().unwrap();
-
-    if choise < 1 || choise > profiles.len() + 1 {
-        println!("Invalid choise: {choise}");
-        return;
+    if choise.is_err() {
+        println!("Invalid number: {choise_raw}");
+        return true;
     }
 
-    if choise == profiles.len() + 1 {
-        print!("Name: ");
-        stdout().flush().unwrap();
-        input.clear();
-        stdin().lock().read_line(&mut input).unwrap();
-        let name = input.trim().to_string();
+    let choise = choise.unwrap();
+    let add_profile_choise = profiles.len() + 1;
+    let max_choise_number = add_profile_choise;
 
-        print!("Email: ");
-        stdout().flush().unwrap();
-        input.clear();
-        stdin().lock().read_line(&mut input).unwrap();
-        let email = input.trim().to_string();
+    if choise < 1 || choise > max_choise_number {
+        println!("Invalid choise: {choise}");
+        return true;
+    }
 
-        let profile = Profile {
-            name: name,
-            email: email,
-        };
-
-        add_profile_to_config(&profile, &config_path).unwrap();
+    if choise == add_profile_choise {
+        create_profile();
+        return true;
     } else {
         let profile = &profiles[choise - 1];
         config_git_user(profile.name.as_str(), profile.email.as_str());
-
         println!(
             "\nUser '{}:{}' successfully configured",
             profile.name, profile.email
         );
+        return false;
     }
+}
+
+fn create_profile() {
+    let mut input_buffer = String::new();
+
+    print("Name: ");
+    let name = input(&mut input_buffer).trim().to_string();
+
+    print("Email: ");
+    let email = input(&mut input_buffer).trim().to_string();
+
+    let profile = Profile {
+        name: name,
+        email: email,
+    };
+
+    let config_path = get_config_path();
+    add_profile_to_config(&profile, &config_path)
+        .expect(&format!("Couldn't add profile to {}", config_path));
+}
+
+fn print(string: &str) {
+    print!("{}", string);
+    stdout().flush().unwrap();
+}
+
+fn input(buffer: &mut String) -> String {
+    buffer.clear();
+    stdin().lock().read_line(buffer).unwrap();
+    return buffer.clone();
 }
 
 fn add_profile_to_config(profile: &Profile, file_path: &str) -> Result<(), std::io::Error> {
@@ -104,15 +145,15 @@ fn add_profile_to_config(profile: &Profile, file_path: &str) -> Result<(), std::
         write!(file, "\n")?;
     }
 
-    writeln!(file, "{}", string_record_from(profile))?;
+    writeln!(file, "{}", to_string(profile))?;
     return Ok(());
 }
 
-fn string_record_from(profile: &Profile) -> String {
+fn to_string(profile: &Profile) -> String {
     return format!("{}:{}", profile.name, profile.email);
 }
 
-fn is_input_positive(input: &str) -> bool {
+fn is_choise_positive(input: &str) -> bool {
     if input.len() == 0 {
         return false;
     }
@@ -127,10 +168,11 @@ fn is_input_positive(input: &str) -> bool {
     return false;
 }
 
-// TODO: check if exists
 fn read_profiles_from_file(file_path: &str) -> Vec<Profile> {
-    let contents = fs::read_to_string(file_path)
-        .expect(format!("Couldn't read the file {}", file_path).as_str());
+    let contents = fs::read_to_string(file_path).unwrap_or_else(|_| {
+        File::create(file_path).expect(&format!("Couldn't create {}", file_path));
+        return String::new();
+    });
 
     let mut profiles: Vec<Profile> = Vec::new();
 
@@ -147,20 +189,17 @@ fn read_profiles_from_file(file_path: &str) -> Vec<Profile> {
     return profiles;
 }
 
-fn get_config_path() -> Option<String> {
-    let user_dirs = UserDirs::new();
+fn get_config_path() -> String {
+    let config_name = ".git-user.txt";
 
-    return match user_dirs {
-        None => None,
-        Some(user_dirs) => {
-            let home = user_dirs.home_dir();
-            let config_path = home.join(".git-user.txt");
-            return match config_path.to_str() {
-                None => None,
-                Some(path) => Some(String::from(path)),
-            };
-        }
-    };
+    let user_dirs = UserDirs::new().expect("Couldn't get home directory path");
+    let home_dir = user_dirs.home_dir();
+    return String::from(
+        home_dir
+            .join(config_name)
+            .to_str()
+            .expect("The home path probably contains some weird characters"),
+    );
 }
 
 fn config_git_user(name: &str, email: &str) {
@@ -187,7 +226,6 @@ fn get_current_profile() -> Option<Profile> {
     }
 }
 
-// TODO: error handling
 fn execute(command: Vec<&str>) -> String {
     if command.len() == 0 {
         return String::from("");
