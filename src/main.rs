@@ -1,6 +1,8 @@
 use directories::UserDirs;
 use std::{
-    fs::{self},
+    error::Error,
+    fmt::{format, write},
+    fs::{self, OpenOptions},
     io::{stdin, stdout, BufRead, Write},
     process::Command,
 };
@@ -33,16 +35,18 @@ fn main() {
         println!("No user configured for this repo")
     }
 
-    if profiles.len() == 0 {
-        println!("No profiles found in {config_path}");
-        return;
-    }
-
     println!("\nWhich profile to add? (from {config_path})");
     for (i, profile) in profiles.iter().enumerate() {
         println!("{}. {} - {}", i + 1, profile.name, profile.email)
     }
-    print!("Option: ");
+
+    if profiles.len() == 0 {
+        println!("No profiles found in {config_path}");
+    }
+
+    println!("{}. Add a new profile", profiles.len() + 1);
+
+    print!("\nOption: ");
     stdout().flush().unwrap();
 
     input.clear();
@@ -50,18 +54,64 @@ fn main() {
 
     let choise: usize = input.trim().parse().unwrap();
 
-    if choise < 1 || choise > profiles.len() {
+    if choise < 1 || choise > profiles.len() + 1 {
         println!("Invalid choise: {choise}");
         return;
     }
 
-    let profile = &profiles[choise - 1];
-    config_git_user(profile.name.as_str(), profile.email.as_str());
+    if choise == profiles.len() + 1 {
+        print!("Name: ");
+        stdout().flush().unwrap();
+        input.clear();
+        stdin().lock().read_line(&mut input).unwrap();
+        let name = input.trim().to_string();
 
-    println!(
-        "\nUser '{}:{}' successfully configured",
-        profile.name, profile.email
-    );
+        print!("Email: ");
+        stdout().flush().unwrap();
+        input.clear();
+        stdin().lock().read_line(&mut input).unwrap();
+        let email = input.trim().to_string();
+
+        let profile = Profile {
+            name: name,
+            email: email,
+        };
+
+        add_profile_to_config(&profile, &config_path).unwrap();
+    } else {
+        let profile = &profiles[choise - 1];
+        config_git_user(profile.name.as_str(), profile.email.as_str());
+
+        println!(
+            "\nUser '{}:{}' successfully configured",
+            profile.name, profile.email
+        );
+    }
+}
+
+fn add_profile_to_config(profile: &Profile, file_path: &str) -> Result<(), std::io::Error> {
+    let contents = fs::read_to_string(file_path)?;
+    let mut should_add_newline = false;
+
+    if contents.len() > 0 && contents.as_str().chars().last().unwrap() != '\n' {
+        should_add_newline = true;
+    }
+
+    let mut file = OpenOptions::new()
+        .write(true)
+        .append(true)
+        .open(file_path)?;
+
+    if should_add_newline {
+        write!(file, "\n")?;
+    }
+
+    writeln!(file, "{}", string_record_from(profile))?;
+    return Ok(());
+}
+
+fn string_record_from(profile: &Profile) -> String {
+    return format!("{}:{}", profile.name, profile.email);
 }
 
 fn is_input_positive(input: &str) -> bool {
