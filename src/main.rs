@@ -1,6 +1,7 @@
 use std::io::{stdin, stdout, BufRead, Write};
 
 mod core;
+mod tests;
 use crate::core::Profile;
 
 fn main() {
@@ -53,7 +54,13 @@ fn dispatch_options(profiles: &[Profile]) -> bool {
     println!("\nWhich profile to use in this repo? (from {config_path})");
 
     for (i, profile) in profiles.iter().enumerate() {
-        println!("{}. Profile '{}:{}'", i + 1, profile.name, profile.email)
+        println!(
+            "{}. Profile '{}:{}' {}",
+            i + 1,
+            profile.name,
+            profile.email,
+            profile.description
+        )
     }
 
     println!("{}. Add a new profile", profiles.len() + 1);
@@ -102,6 +109,7 @@ fn create_profile() {
     let profile = Profile {
         name: name,
         email: email,
+        description: String::new(),
     };
 
     let config_path = core::get_config_path();

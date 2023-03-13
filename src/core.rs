@@ -5,10 +5,11 @@ use std::{
     process::Command,
 };
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub struct Profile {
     pub name: String,
     pub email: String,
+    pub description: String,
 }
 
 impl Profile {
@@ -82,16 +83,39 @@ pub fn read_profiles_from_file(file_path: &str) -> Vec<Profile> {
     let mut profiles: Vec<Profile> = Vec::new();
 
     for line in contents.split("\n") {
-        let split: Vec<&str> = line.split(":").collect();
-        if split.len() == 2 {
+        if let Some(record) = parse_line(line) {
             profiles.push(Profile {
-                name: split[0].trim().to_string(),
-                email: split[1].trim().to_string(),
+                name: record.name,
+                email: record.email,
+                description: record.description,
             });
         }
     }
 
     return profiles;
+}
+
+pub fn parse_line(line: &str) -> Option<Profile> {
+    if line.len() == 0 {
+        return None;
+    }
+
+    let split = line.trim().split_once([' ', '\t']);
+
+    let (profile_split, description) = match split {
+        Some(split) => (split.0.trim(), split.1.trim().to_string()),
+        None => (line.trim(), String::new()),
+    };
+
+    let profile_split = profile_split.split_once(':')?;
+    let name = profile_split.0.trim().to_string();
+    let email = profile_split.1.trim().to_string();
+
+    return Some(Profile {
+        name: name,
+        email: email,
+        description: description,
+    });
 }
 
 pub fn get_current_profile() -> Option<Profile> {
@@ -109,6 +133,7 @@ pub fn get_current_profile() -> Option<Profile> {
         return Some(Profile {
             name: name,
             email: email,
+            description: String::new(),
         });
     }
 }
