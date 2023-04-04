@@ -10,11 +10,10 @@ use crate::core::Profile;
 fn main() {
     setup_keyboard_interrupt_handler();
 
-    let mut console_input = String::new();
     if let Some(profile) = core::get_current_profile() {
         println!("User '{}' already added to this repo.", profile.to_string());
         print("Change user? [Y/n] ");
-        let choise = input(&mut console_input);
+        let choise = input();
 
         if !is_choise_positive(&choise) {
             return;
@@ -47,12 +46,11 @@ fn offer_to_configure_profile() {
 
 fn dispatch_options(profiles: &[Profile]) -> bool {
     let config_path = core::get_config_path();
-    let mut input_buffer = String::new();
 
     if profiles.len() == 0 {
         println!("No profiles found in {config_path}");
         print("Add a new profile? [Y/n] ");
-        let choise = input(&mut input_buffer);
+        let choise = input();
 
         if is_choise_positive(&choise) {
             create_profile();
@@ -77,7 +75,7 @@ fn dispatch_options(profiles: &[Profile]) -> bool {
     println!("{}. Add a new profile", profiles.len() + 1);
     print("\nOption: ");
 
-    let choise_raw = input(&mut input_buffer);
+    let choise_raw = input();
     let choise = choise_raw.trim().parse::<usize>();
 
     if choise.is_err() {
@@ -109,13 +107,11 @@ fn dispatch_options(profiles: &[Profile]) -> bool {
 }
 
 fn create_profile() {
-    let mut input_buffer = String::new();
-
     print("Name: ");
-    let name = input(&mut input_buffer).trim().to_string();
+    let name = input().trim().to_string();
 
     print("Email: ");
-    let email = input(&mut input_buffer).trim().to_string();
+    let email = input().trim().to_string();
 
     let profile = Profile {
         name: name,
@@ -133,10 +129,15 @@ fn print(string: &str) {
     stdout().flush().unwrap();
 }
 
-fn input(buffer: &mut String) -> String {
-    buffer.clear();
-    stdin().lock().read_line(buffer).unwrap();
-    return buffer.clone();
+fn input() -> String {
+    let mut buffer = String::new();
+
+    stdin()
+        .lock()
+        .read_line(&mut buffer)
+        .expect("Error reading from stdin");
+
+    return buffer;
 }
 
 fn is_choise_positive(input: &str) -> bool {
