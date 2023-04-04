@@ -1,12 +1,16 @@
-use std::io::{stdin, stdout, BufRead, Write};
+use std::{
+    io::{stdin, stdout, BufRead, Write},
+    process::exit,
+};
 
 mod core;
 mod tests;
 use crate::core::Profile;
 
 fn main() {
-    let mut console_input = String::new();
+    setup_keyboard_interrupt_handler();
 
+    let mut console_input = String::new();
     if let Some(profile) = core::get_current_profile() {
         println!("User '{}' already added to this repo.", profile.to_string());
         print("Change user? [Y/n] ");
@@ -20,6 +24,13 @@ fn main() {
     }
 
     offer_to_configure_profile()
+}
+
+fn setup_keyboard_interrupt_handler() {
+    ctrlc::set_handler(move || {
+        exit(0);
+    })
+    .expect("Error setting Ctrl-C handler");
 }
 
 fn offer_to_configure_profile() {
