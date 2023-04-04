@@ -100,7 +100,7 @@ pub fn parse_line(line: &str) -> Option<Profile> {
         return None;
     }
 
-    let split = line.trim().split_once([' ', '\t']);
+    let split = line.trim().split_once('#');
 
     let (profile_split, description) = match split {
         Some(split) => (split.0.trim(), split.1.trim().to_string()),

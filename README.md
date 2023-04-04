@@ -25,9 +25,9 @@ User 'user2:user2@example.com' successfully configured
 All profiles are stored in `~/.git-user.txt`
 
 ```
-user1:user1@example.com    work profile
-user2:user2@example.com    personal profile
-user3:user3@example.com    another personal profile
+user1:user1@example.com    # work profile
+user2:user2@example.com    # personal profile
+user3:user3@example.com    # another personal profile
 ```
 
 ## License
