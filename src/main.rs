@@ -1,11 +1,11 @@
+mod core;
+mod profile;
+
+use crate::profile::Profile;
 use std::{
     io::{stdin, stdout, BufRead, Write},
     process::exit,
 };
-
-mod core;
-mod tests;
-use crate::core::Profile;
 
 fn main() {
     setup_keyboard_interrupt_handler();
