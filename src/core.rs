@@ -7,7 +7,7 @@ use std::{
 };
 
 pub fn execute(command: Vec<&str>) -> String {
-    if command.len() == 0 {
+    if command.is_empty() {
         return String::from("");
     }
 
@@ -45,32 +45,29 @@ pub fn add_profile_to_config(profile: &Profile, file_path: &str) -> Result<(), s
     let contents = fs::read_to_string(file_path)?;
     let mut should_add_newline = false;
 
-    if contents.len() > 0 && contents.as_str().chars().last().unwrap() != '\n' {
+    if !contents.is_empty() && !contents.as_str().ends_with('\n') {
         should_add_newline = true;
     }
 
-    let mut file = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .open(file_path)?;
+    let mut file = OpenOptions::new().append(true).open(file_path)?;
 
     if should_add_newline {
-        write!(file, "\n")?;
+        writeln!(file)?;
     }
 
-    writeln!(file, "{}", profile.to_string())?;
-    return Ok(());
+    writeln!(file, "{}", profile)?;
+    Ok(())
 }
 
 pub fn read_profiles_from_file(file_path: &str) -> Vec<Profile> {
     let contents = fs::read_to_string(file_path).unwrap_or_else(|_| {
-        File::create(file_path).expect(&format!("Couldn't create {}", file_path));
-        return String::new();
+        File::create(file_path).unwrap_or_else(|_| panic!("Couldn't create {}", file_path));
+        String::new()
     });
 
     let mut profiles: Vec<Profile> = Vec::new();
 
-    for line in contents.split("\n") {
+    for line in contents.split('\n') {
         if let Some(record) = parse_line(line) {
             profiles.push(Profile {
                 name: record.name,
@@ -80,11 +77,11 @@ pub fn read_profiles_from_file(file_path: &str) -> Vec<Profile> {
         }
     }
 
-    return profiles;
+    profiles
 }
 
 pub fn parse_line(line: &str) -> Option<Profile> {
-    if line.len() == 0 {
+    if line.is_empty() {
         return None;
     }
 
@@ -99,11 +96,11 @@ pub fn parse_line(line: &str) -> Option<Profile> {
     let name = profile_split.0.trim().to_string();
     let email = profile_split.1.trim().to_string();
 
-    return Some(Profile {
-        name: name,
-        email: email,
-        description: description,
-    });
+    Some(Profile {
+        name,
+        email,
+        description,
+    })
 }
 
 pub fn get_current_profile() -> Option<Profile> {
@@ -115,13 +112,13 @@ pub fn get_current_profile() -> Option<Profile> {
         .trim()
         .to_string();
 
-    if name.len() == 0 || email.len() == 0 {
-        return None;
+    if name.is_empty() || email.is_empty() {
+        None
     } else {
-        return Some(Profile {
-            name: name,
-            email: email,
+        Some(Profile {
+            name,
+            email,
             description: String::new(),
-        });
+        })
     }
 }

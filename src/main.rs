@@ -11,7 +11,7 @@ fn main() {
     setup_keyboard_interrupt_handler();
 
     if let Some(profile) = core::get_current_profile() {
-        println!("User '{}' already added to this repo.", profile.to_string());
+        println!("User '{}' already added to this repo.", profile);
         print("Change user? [Y/n] ");
         let choise = input();
 
@@ -47,7 +47,7 @@ fn offer_to_configure_profile() {
 fn dispatch_options(profiles: &[Profile]) -> bool {
     let config_path = core::get_config_path();
 
-    if profiles.len() == 0 {
+    if profiles.is_empty() {
         println!("No profiles found in {config_path}");
         print("Add a new profile? [Y/n] ");
         let choise = input();
@@ -94,7 +94,7 @@ fn dispatch_options(profiles: &[Profile]) -> bool {
 
     if choise == add_profile_choise {
         create_profile();
-        return true;
+        true
     } else {
         let profile = &profiles[choise - 1];
         core::config_git_user(profile.name.as_str(), profile.email.as_str());
@@ -102,7 +102,7 @@ fn dispatch_options(profiles: &[Profile]) -> bool {
             "\nUser '{}:{}' successfully configured",
             profile.name, profile.email
         );
-        return false;
+        false
     }
 }
 
@@ -114,14 +114,14 @@ fn create_profile() {
     let email = input().trim().to_string();
 
     let profile = Profile {
-        name: name,
-        email: email,
+        name,
+        email,
         description: String::new(),
     };
 
     let config_path = core::get_config_path();
     core::add_profile_to_config(&profile, &config_path)
-        .expect(&format!("Couldn't add profile to {}", config_path));
+        .unwrap_or_else(|_| panic!("Couldn't add profile to {}", config_path));
 }
 
 fn print(string: &str) {
@@ -137,11 +137,11 @@ fn input() -> String {
         .read_line(&mut buffer)
         .expect("Error reading from stdin");
 
-    return buffer;
+    buffer
 }
 
 fn is_choise_positive(input: &str) -> bool {
-    if input.len() == 0 {
+    if input.is_empty() {
         return false;
     }
 
@@ -152,5 +152,5 @@ fn is_choise_positive(input: &str) -> bool {
         return true;
     }
 
-    return false;
+    false
 }
