@@ -36,6 +36,7 @@ fn main() {
 
 fn setup_keyboard_interrupt_handler() {
     ctrlc::set_handler(move || {
+        println!();
         exit(0);
     })
     .expect("Error setting Ctrl-C handler");
@@ -82,40 +83,45 @@ fn dispatch_options(profiles: &[Profile]) -> bool {
         )
     }
 
-    println!("  [{}] Add a new profile", profiles.len() + 1);
+    println!("  [a] Add a new profile");
+    println!("  [q] Quit");
     println!();
     print("-> Option: ");
 
-    let choise_raw = input();
-    let choise = choise_raw.trim().parse::<usize>();
+    let input = input();
+    let choise_raw = input.trim();
 
-    if choise.is_err() {
-        println!("Invalid number: {choise_raw}");
-        return true;
-    }
-
-    let choise = choise.unwrap();
-    let add_profile_choise = profiles.len() + 1;
-    let max_choise_number = add_profile_choise;
-
-    if choise < 1 || choise > max_choise_number {
-        println!("Invalid choise: {choise}");
-        return true;
-    }
-
-    if choise == add_profile_choise {
+    if choise_raw.to_lowercase() == "a" {
         create_profile();
-        true
-    } else {
-        let profile = &profiles[choise - 1];
-        core::config_git_user(profile.name.as_str(), profile.email.as_str());
-        println!();
-        println!(
-            "User {} ({}) has been selected for this repo",
-            profile.name, profile.email
-        );
-        false
+        return true;
+    } else if choise_raw.to_lowercase() == "q" {
+        return false;
     }
+
+    let choise_num = choise_raw.parse::<usize>();
+
+    if choise_num.is_err() {
+        println!("Invalid input '{choise_raw}'");
+        println!();
+        return true;
+    }
+
+    let choise_num = choise_num.unwrap();
+    let max_choise_number = profiles.len() + 1;
+
+    if choise_num < 1 || choise_num > max_choise_number {
+        println!("Invalid choise: {choise_num}");
+        return true;
+    }
+
+    let profile = &profiles[choise_num - 1];
+    core::config_git_user(profile.name.as_str(), profile.email.as_str());
+    println!();
+    println!(
+        "User {} ({}) has been selected for this repo",
+        profile.name, profile.email
+    );
+    false
 }
 
 fn create_profile() {
