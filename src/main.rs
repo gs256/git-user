@@ -10,19 +10,28 @@ use std::{
 fn main() {
     setup_keyboard_interrupt_handler();
 
+    println!("┌──────────┐");
+    println!("│ GIT-USER │");
+    println!("└──────────┘");
+    println!();
+
     if let Some(profile) = core::get_current_profile() {
-        println!("User '{}' already added to this repo.", profile);
-        print("Change user? [Y/n] ");
+        println!(
+            "User {} ({}) is already added to this repo",
+            profile.name, profile.email
+        );
+        print("-> Change user? [Y/n] ");
         let choise = input();
 
         if !is_choise_positive(&choise) {
             return;
         }
-    } else {
-        println!("No user configured for this repo");
+
+        println!();
     }
 
-    offer_to_configure_profile()
+    offer_to_configure_profile();
+    println!();
 }
 
 fn setup_keyboard_interrupt_handler() {
@@ -49,22 +58,23 @@ fn dispatch_options(profiles: &[Profile]) -> bool {
 
     if profiles.is_empty() {
         println!("No profiles found in {config_path}");
-        print("Add a new profile? [Y/n] ");
+        print("-> Add a new profile? [Y/n] ");
         let choise = input();
 
         if is_choise_positive(&choise) {
             create_profile();
+            println!();
             return true;
         }
 
         return false;
     }
 
-    println!("\nWhich profile to use in this repo? (from {config_path})");
+    println!("Pick profile for this repo (from {config_path})");
 
     for (i, profile) in profiles.iter().enumerate() {
         println!(
-            "{}. Profile '{}:{}' {}",
+            "  [{}] {} ({}) -> {}",
             i + 1,
             profile.name,
             profile.email,
@@ -72,8 +82,9 @@ fn dispatch_options(profiles: &[Profile]) -> bool {
         )
     }
 
-    println!("{}. Add a new profile", profiles.len() + 1);
-    print("\nOption: ");
+    println!("  [{}] Add a new profile", profiles.len() + 1);
+    println!();
+    print("-> Option: ");
 
     let choise_raw = input();
     let choise = choise_raw.trim().parse::<usize>();
@@ -98,8 +109,9 @@ fn dispatch_options(profiles: &[Profile]) -> bool {
     } else {
         let profile = &profiles[choise - 1];
         core::config_git_user(profile.name.as_str(), profile.email.as_str());
+        println!();
         println!(
-            "\nUser '{}:{}' successfully configured",
+            "User {} ({}) has been selected for this repo",
             profile.name, profile.email
         );
         false
@@ -107,10 +119,10 @@ fn dispatch_options(profiles: &[Profile]) -> bool {
 }
 
 fn create_profile() {
-    print("Name: ");
+    print("-> Name: ");
     let name = input().trim().to_string();
 
-    print("Email: ");
+    print("-> Email: ");
     let email = input().trim().to_string();
 
     let profile = Profile {
@@ -121,7 +133,7 @@ fn create_profile() {
 
     let config_path = core::get_config_path();
     core::add_profile_to_config(&profile, &config_path)
-        .unwrap_or_else(|_| panic!("Couldn't add profile to {}", config_path));
+        .unwrap_or_else(|_| panic!("[ERROR] Couldn't add profile to {}", config_path));
 }
 
 fn print(string: &str) {
