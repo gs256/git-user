@@ -24,12 +24,13 @@ pub fn execute(command: Vec<&str>) -> String {
 }
 
 pub fn get_config_path() -> String {
-    let config_name = ".git-user.txt";
+    let config_name = "git-user.txt";
 
     let user_dirs = UserDirs::new().expect("Couldn't get home directory path");
     let home_dir = user_dirs.home_dir();
+    let config_dir = home_dir.join(".config");
     return String::from(
-        home_dir
+        config_dir
             .join(config_name)
             .to_str()
             .expect("The home path probably contains some weird characters"),

@@ -25,7 +25,7 @@ Pick profile for this repo
 User John Doe (johndoe@example.com) has been selected for this repo
 ```
 
-All profiles are stored in `~/.git-user.txt` in the following format
+All profiles are stored in `~/.config/git-user.txt` in the following format
 
 ```
 Emploee 123:employee123@corp.com    # work profile
