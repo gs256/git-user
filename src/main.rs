@@ -10,6 +10,7 @@ use std::{
 fn main() {
     setup_keyboard_interrupt_handler();
 
+    println!();
     println!("┌──────────┐");
     println!("│ GIT-USER │");
     println!("└──────────┘");
@@ -71,7 +72,7 @@ fn dispatch_options(profiles: &[Profile]) -> bool {
         return false;
     }
 
-    println!("Pick profile for this repo (from {config_path})");
+    println!("Pick profile for this repo");
 
     for (i, profile) in profiles.iter().enumerate() {
         println!(

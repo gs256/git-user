@@ -9,25 +9,28 @@ The tool has a very straightforward terminal interface
 ```console
 $ git-user
 
-No user configured for this repo
+┌──────────┐
+│ GIT-USER │
+└──────────┘
 
-Which profile to use in this repo? (from /home/username/.git-user.txt)
-1. Profile 'user1:user1@example.com' work profile
-2. Profile 'user2:user2@example.com' personal profile
-3. Profile 'user3:user3@example.com' another personal profile
-4. Add a new profile
+Pick profile for this repo
+  [1] Emploee 123 (employee123@corp.com) -> work profile
+  [2] John Doe (johndoe@example.com) -> personal profile
+  [3] Jane Doe (janedoe@example.com) -> another personal profile
+  [a] Add a new profile
+  [q] Quit
 
-Option: 2
+-> Option: 2
 
-User 'user2:user2@example.com' successfully configured
+User John Doe (johndoe@example.com) has been selected for this repo
 ```
 
-All profiles are stored in `~/.git-user.txt`
+All profiles are stored in `~/.git-user.txt` in the following format
 
 ```
-user1:user1@example.com    # work profile
-user2:user2@example.com    # personal profile
-user3:user3@example.com    # another personal profile
+Emploee 123:employee123@corp.com    # work profile
+John Doe:johndoe@example.com        # personal profile
+Jane Doe:janedoe@example.com        # another personal profile
 ```
 
 ## License
