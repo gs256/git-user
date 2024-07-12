@@ -75,13 +75,17 @@ fn dispatch_options(profiles: &[Profile]) -> bool {
     println!("Pick profile for this repo");
 
     for (i, profile) in profiles.iter().enumerate() {
-        println!(
-            "  [{}] {} ({}) -> {}",
-            i + 1,
-            profile.name,
-            profile.email,
-            profile.description
-        )
+        if profile.description.is_empty() {
+            println!("  [{}] {} ({})", i + 1, profile.name, profile.email,)
+        } else {
+            println!(
+                "  [{}] {} ({}) -> {}",
+                i + 1,
+                profile.name,
+                profile.email,
+                profile.description
+            )
+        }
     }
 
     println!("  [a] Add a new profile");
@@ -132,11 +136,15 @@ fn create_profile() {
     print("-> Email: ");
     let email = input().trim().to_string();
 
+    print("-> Description: ");
+    let description = input().trim().to_string();
+
     let profile = Profile {
         name,
         email,
-        description: String::new(),
+        description,
     };
+    println!();
 
     let config_path = core::get_config_path();
     core::add_profile_to_config(&profile, &config_path)

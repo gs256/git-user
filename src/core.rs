@@ -56,7 +56,11 @@ pub fn add_profile_to_config(profile: &Profile, file_path: &str) -> Result<(), s
         writeln!(file)?;
     }
 
-    writeln!(file, "{}", profile)?;
+    writeln!(
+        file,
+        "{}:{} # {}",
+        profile.name, profile.email, profile.description
+    )?;
     Ok(())
 }
 
