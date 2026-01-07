@@ -8,13 +8,15 @@ use std::{
 };
 
 fn main() {
-    setup_keyboard_interrupt_handler();
+    let app_args = parse_app_args();
 
-    println!();
-    println!("┌──────────┐");
-    println!("│ GIT-USER │");
-    println!("└──────────┘");
-    println!();
+    if app_args.show_version {
+        print_app_version();
+        return;
+    }
+
+    setup_keyboard_interrupt_handler();
+    print_git_user_logo();
 
     if let Some(profile) = core::get_current_profile() {
         println!(
@@ -32,6 +34,31 @@ fn main() {
     }
 
     offer_to_configure_profile();
+    println!();
+}
+
+struct AppArgs {
+    show_version: bool,
+}
+
+fn parse_app_args() -> AppArgs {
+    let mut args = std::env::args().skip(1);
+    let show_version = args.any(|arg| arg == "-v" || arg == "--version");
+    return AppArgs {
+        show_version: show_version,
+    };
+}
+
+fn print_app_version() {
+    let version = env!("CARGO_PKG_VERSION");
+    print!("v{version}");
+}
+
+fn print_git_user_logo() {
+    println!();
+    println!("┌──────────┐");
+    println!("│ GIT-USER │");
+    println!("└──────────┘");
     println!();
 }
 
